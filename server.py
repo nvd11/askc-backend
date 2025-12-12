@@ -22,8 +22,8 @@ async def lifespan(app: FastAPI):
     yield
     # Clean up code here if needed
 
-# Get root_path from an environment variable. Defaults to "/chat-api-svc" if not set.
-root_path = os.getenv("ROOT_PATH", "/chat-api-svc")
+# Get root_path from an environment variable. Defaults to "/askc-bak-svc" if not set.
+root_path = os.getenv("ROOT_PATH", "/askc-bak-svc")
 
 # Initialize the FastAPI app
 app = FastAPI(

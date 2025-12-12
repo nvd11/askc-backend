@@ -1,0 +1,24 @@
+{{- if .Values.iap.enabled -}}
+# This service is a dedicated entrypoint for IAP traffic to the backend.
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.service.name }}-iap
+  labels:
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    app: {{ .Values.service.appName }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    {{- if .Chart.AppVersion }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+    {{- end }}
+spec:
+  type: ClusterIP
+  selector:
+    app: {{ .Values.service.appName }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+  ports:
+    - protocol: TCP
+      port: {{ .Values.service.port }}
+      targetPort: http
+{{- end -}}

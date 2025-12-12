@@ -119,3 +119,11 @@ cloudsql:
 backendPolicy:
   enabled: true
   timeoutSec: 300
+
+# IAP configuration
+iap:
+  enabled: false
+  # The name of the K8s secret holding the OAuth client ID and secret
+  secretName: "iap-oauth-credentials"
+  # The OAuth Client ID from your GCP project
+  clientID: ""

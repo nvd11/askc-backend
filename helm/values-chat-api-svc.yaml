@@ -2,15 +2,15 @@
 # This file overrides the default values in helm/values.yaml to deploy the chat service.
 
 image:
-  repository: europe-west2-docker.pkg.dev/jason-hsbc/my-docker-repo/chat-api-svc
+  repository: europe-west2-docker.pkg.dev/jason-hsbc/my-docker-repo/askc-bak-svc
   # The tag is intentionally left blank. It will be set by Cloud Build during deployment.
   tag: ""
 
 service:
   # appName is used for labels and selectors, ensuring the service finds the correct pods.
-  appName: chat-api-svc
+  appName: askc-bak-svc
   # The name of the Kubernetes Service resource.
-  name: clusterip-chat-api-svc
+  name: clusterip-askc-bak-svc
   port: 8000
 
 # For simplicity as requested, probes are not configured.
@@ -30,3 +30,8 @@ secretName: "chat-api-secrets"
 cloudsql:
   enabled: true
   instanceConnectionName: "jason-hsbc:europe-west2:my-database-instance"
+
+# Enable IAP for this service
+iap:
+  enabled: true
+  clientID: "912156613264-eaphf3lhji9jbp402e2qac050oiq1cdm.apps.googleusercontent.com"
