@@ -1,0 +1,16 @@
+{
+    "python.testing.pytestArgs": [
+        "-s",
+        "test"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true,
+    "python.envFile": "${workspaceFolder}/.env",
+    "python.testing.envFile": "${workspaceFolder}/.env",
+    "terminal.integrated.env.linux": {
+        "PYTHONPATH": "${workspaceFolder}"
+    },
+    "python.analysis.extraPaths": [
+        "${workspaceFolder}"
+    ]
+}

@@ -1,0 +1,36 @@
+steps:
+- name: 'gcr.io/cloud-builders/gcloud'
+  id: 'get-db-password'
+  entrypoint: 'bash'
+  args:
+  - '-c'
+  - |
+    gcloud secrets versions access latest --secret="db-pass-nvd11" --project="jason-hsbc" > /workspace/db_password.txt
+
+- name: 'postgres:14'
+  id: 'create-prod-database'
+  entrypoint: 'bash'
+  args:
+  - '-c'
+  - |
+    export PGPASSWORD=$$(cat /workspace/db_password.txt)
+    # Connect to the default 'postgres' db to create our new database
+    # The command will fail if the DB already exists, which is acceptable.
+    psql -h 34.39.2.90 -U nvd11 -d postgres -c "CREATE DATABASE chatai_prod;" || echo "Database chatai_prod might already exist. Continuing..."
+
+- name: 'postgres:14'
+  id: 'run-prod-schema-script'
+  entrypoint: 'bash'
+  args:
+  - '-c'
+  - |
+    export PGPASSWORD=$$(cat /workspace/db_password.txt)
+    # Connect to the newly created 'chatai_prod' db to create tables
+    psql -h 34.39.2.90 -U nvd11 -d chatai_prod -f tbl_creation/init_schema.sql
+  waitFor:
+    - 'create-prod-database'
+
+serviceAccount: "projects/jason-hsbc/serviceAccounts/terraform@jason-hsbc.iam.gserviceaccount.com"
+
+options:
+  logging: CLOUD_LOGGING_ONLY

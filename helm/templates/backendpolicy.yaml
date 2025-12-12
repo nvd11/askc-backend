@@ -1,0 +1,22 @@
+{{- if .Values.backendPolicy.enabled }}
+apiVersion: networking.gke.io/v1
+kind: GCPBackendPolicy
+metadata:
+  name: {{ .Release.Name }}-backend-policy
+  namespace: {{ .Release.Namespace }}
+  labels:
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    app: {{ .Values.service.appName }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    {{- if .Chart.AppVersion }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+    {{- end }}
+spec:
+  default:
+    timeoutSec: {{ .Values.backendPolicy.timeoutSec }}
+  targetRef:
+    group: ""
+    kind: Service
+    name: {{ .Values.service.name }}
+{{- end }}
