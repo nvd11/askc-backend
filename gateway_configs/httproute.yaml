@@ -1,0 +1,170 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: py-api-route
+  namespace: default
+spec:
+  hostnames:
+  - jpgcp.shop
+  - gateway.jpgcp.cloud
+  parentRefs:
+  - group: gateway.networking.k8s.io
+    kind: Gateway
+    name: py-api-gateway
+  rules:
+  - backendRefs:
+    - group: ""
+      kind: Service
+      name: clusterip-python-template-app
+      port: 8000
+      weight: 1
+    matches:
+    - path:
+        type: PathPrefix
+        value: /python-template-app
+
+  - backendRefs:
+    - group: ""
+      kind: Service
+      name: clusterip-chat-api-svc-iap
+      port: 8000
+      weight: 1
+    matches:
+    - path:
+        type: PathPrefix
+        value: /chat-api-svc
+
+  - backendRefs:
+    - group: ""
+      kind: Service
+      name: chat-ui-frontend-service
+      port: 80
+      weight: 1
+    filters:
+    - type: URLRewrite
+      urlRewrite:
+        path:
+          replacePrefixMatch: /
+          type: ReplacePrefixMatch
+    matches:
+    - path:
+        type: PathPrefix
+        value: /chat
+
+  - backendRefs:
+    - group: ""
+      kind: Service
+      name: chat-ui-iap-service
+      port: 80
+      weight: 1
+    filters:
+    - type: URLRewrite
+      urlRewrite:
+        path:
+          replacePrefixMatch: /
+          type: ReplacePrefixMatch
+    matches:
+    - path:
+        type: PathPrefix
+        value: /chat-iap
+
+  - backendRefs:
+    - group: ""
+      kind: Service
+      name: clusterip-py-api-svc
+      port: 8000
+      weight: 1
+    filters:
+    - type: URLRewrite
+      urlRewrite:
+        path:
+          replacePrefixMatch: /
+          type: ReplacePrefixMatch
+    matches:
+    - path:
+        type: PathPrefix
+        value: /pyapi
+
+  - backendRefs:
+    - group: ""
+      kind: Service
+      name: clusterip-py-webhook-svc
+      port: 8000
+      weight: 1
+    filters:
+    - type: URLRewrite
+      urlRewrite:
+        path:
+          replacePrefixMatch: /
+          type: ReplacePrefixMatch
+    matches:
+    - path:
+        type: PathPrefix
+        value: /webhook
+
+  - backendRefs:
+    - group: ""
+      kind: Service
+      name: clusterip-py-github-agent
+      port: 8000
+      weight: 1
+    matches:
+    - path:
+        type: PathPrefix
+        value: /py-github-agent
+
+  - backendRefs:
+    - group: ""
+      kind: Service
+      name: clusterip-askc-bak-svc-iap
+      port: 8000
+      weight: 1
+    matches:
+    - path:
+        type: PathPrefix
+        value: /askc-bak-svc
+
+  - backendRefs:
+    - group: ""
+      kind: Service
+      name: clusterip-askc-bak-svc
+      port: 8000
+      weight: 1
+    filters:
+    - type: URLRewrite
+      urlRewrite:
+        path:
+          replacePrefixMatch: /
+          type: ReplacePrefixMatch
+    matches:
+    - path:
+        type: PathPrefix
+        value: /askc-bak-svc-noiap
+
+  - backendRefs:
+    - group: ""
+      kind: Service
+      name: clusterip-askc-bak-svc-dev-iap
+      port: 8000
+      weight: 1
+    matches:
+    - path:
+        type: PathPrefix
+        value: /askc-bak-svc-dev
+
+  - backendRefs:
+    - group: ""
+      kind: Service
+      name: clusterip-askc-bak-svc-dev
+      port: 8000
+      weight: 1
+    filters:
+    - type: URLRewrite
+      urlRewrite:
+        path:
+          replacePrefixMatch: /
+          type: ReplacePrefixMatch
+    matches:
+    - path:
+        type: PathPrefix
+        value: /askc-bak-svc-dev-noiap

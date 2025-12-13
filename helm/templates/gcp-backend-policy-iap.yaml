@@ -1,0 +1,17 @@
+{{- if .Values.iap.enabled -}}
+apiVersion: networking.gke.io/v1
+kind: GCPBackendPolicy
+metadata:
+  name: {{ .Values.service.appName }}-iap-policy
+spec:
+  default:
+    iap:
+      enabled: true
+      oauth2ClientSecret:
+        name: {{ .Values.iap.secretName }}
+      clientID: {{ .Values.iap.clientID | quote }}
+  targetRef:
+    group: ""
+    kind: Service
+    name: {{ .Values.service.name }}-iap
+{{- end -}}

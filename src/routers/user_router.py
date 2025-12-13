@@ -5,6 +5,7 @@ from typing import List
 from src.configs.db import get_db_session
 from src.schemas.user import UserSchema, UserCreateSchema, IAPUser
 from src.dao import user_dao
+from src.services import user_service
 
 router = APIRouter(
     prefix="/api/v1",
@@ -35,16 +36,16 @@ async def get_user_endpoint(username: str, db: AsyncSession = Depends(get_db_ses
     return db_user
 
 @router.get("/me", response_model=IAPUser)
-async def get_current_user_from_iap(request: Request):
+async def get_current_user_from_iap(request: Request, db: AsyncSession = Depends(get_db_session)):
     """
     Get the current authenticated user's info from IAP headers.
     This endpoint is designed to be used when the application is deployed behind Google Cloud IAP.
     """
     email = request.headers.get("X-Goog-Authenticated-User-Email")
-    user_id = request.headers.get("X-Goog-Authenticated-User-Id")
+    idp_user_id = request.headers.get("X-Goog-Authenticated-User-Id")
     
     # IAP email header often comes in the format: "accounts.google.com:user@example.com"
     if email and ":" in email:
         email = email.split(":")[-1]
 
-    return {"email": email, "user_id": user_id}
+    return await user_service.get_or_create_iap_user(db, email, idp_user_id)

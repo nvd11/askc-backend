@@ -15,4 +15,6 @@ class UserSchema(UserBase):
 
 class IAPUser(BaseModel):
     email: Optional[str] = None
-    user_id: Optional[str] = None
+    user_id: Optional[int] = None
+    idp_user_id: Optional[str] = None
+    username: Optional[str] = None

@@ -15,7 +15,7 @@ database:
   dbname: "default_db"
   user: "nvd11"
   password_env_var: "DB_PASSWORD"
-  base-url: "https://api.deepseek.com"
+
 
 gemini:
   api-key: "GEMINI_API_KEY"

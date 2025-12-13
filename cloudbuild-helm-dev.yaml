@@ -1,4 +1,4 @@
-# This Cloud Build file builds a Docker image and deploys it to GKE using Helm.
+# This Cloud Build file builds a Docker image and deploys it to GKE using Helm (Dev Environment).
 # It incorporates best practices like automatic semantic versioning and substitution variables.
 
 steps:
@@ -68,22 +68,22 @@ steps:
         tar -zxvf helm.tar.gz
         
         NEW_TAG=$$(cat /workspace/tag.txt)
-        echo "--- Deploying to GKE with Helm, using image tag: $$NEW_TAG ---"
+        echo "--- Deploying to GKE with Helm (Dev), using image tag: $$NEW_TAG ---"
         
         # Get GKE credentials
         gcloud container clusters get-credentials ${_CLUSTER_NAME} --region ${_CLUSTER_LOCATION} --project $PROJECT_ID
         
-        # Create/Update a single Kubernetes secret with all credentials
-        echo "--- Creating/Updating Kubernetes secret 'chat-api-secrets' ---"
-        kubectl create secret generic chat-api-secrets \
+        # Create/Update a single Kubernetes secret for Dev with all credentials
+        echo "--- Creating/Updating Kubernetes secret 'chat-api-secrets-dev' ---"
+        kubectl create secret generic chat-api-secrets-dev \
           --from-literal=DB_PASSWORD="$$(gcloud secrets versions access latest --secret=db-pass-nvd11 --project=$PROJECT_ID)" \
           --from-literal=GEMINI_API_KEY="$$(gcloud secrets versions access latest --secret=gemini-api-key --project=$PROJECT_ID)" \
           --from-literal=DEEPSEEK_API_KEY="$$(gcloud secrets versions access latest --secret=deepseek-api-key --project=$PROJECT_ID)" \
           --dry-run=client -o yaml | kubectl apply -f -
         
-        # Run Helm deployment
+        # Run Helm deployment for Dev
         ./linux-amd64/helm upgrade --install ${_APP_NAME} ./helm \
-          -f ./helm/values-chat-api-svc.yaml \
+          -f ./helm/values-chat-api-svc-dev.yaml \
           --set image.tag=$$NEW_TAG \
           --namespace default
     waitFor: ["Push Docker Image to GAR"]
@@ -100,6 +100,6 @@ serviceAccount: "projects/jason-hsbc/serviceAccounts/terraform@jason-hsbc.iam.gs
 
 # Substitution variables to make the pipeline reusable.
 substitutions:
-  _APP_NAME: askc-bak-svc
+  _APP_NAME: askc-bak-svc-dev
   _CLUSTER_NAME: my-cluster2
   _CLUSTER_LOCATION: europe-west2

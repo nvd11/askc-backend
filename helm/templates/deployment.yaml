@@ -27,6 +27,9 @@ spec:
           env:
             - name: APP_ENVIRONMENT
               value: {{ .Values.appEnv | quote }}
+            {{- if .Values.extraEnv }}
+            {{- toYaml .Values.extraEnv | nindent 12 }}
+            {{- end }}
           {{- if .Values.secretName }}
           envFrom:
             - secretRef:
