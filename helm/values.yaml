@@ -17,6 +17,7 @@ fullnameOverride: ""
 # Environment variables for the application
 appEnv: "prod"
 secretName: ""
+extraEnv: []
 
 podAnnotations: {}
 podLabels: {}

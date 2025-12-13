@@ -140,3 +140,31 @@ spec:
     - path:
         type: PathPrefix
         value: /askc-bak-svc-noiap
+
+  - backendRefs:
+    - group: ""
+      kind: Service
+      name: clusterip-askc-bak-svc-dev-iap
+      port: 8000
+      weight: 1
+    matches:
+    - path:
+        type: PathPrefix
+        value: /askc-bak-svc-dev
+
+  - backendRefs:
+    - group: ""
+      kind: Service
+      name: clusterip-askc-bak-svc-dev
+      port: 8000
+      weight: 1
+    filters:
+    - type: URLRewrite
+      urlRewrite:
+        path:
+          replacePrefixMatch: /
+          type: ReplacePrefixMatch
+    matches:
+    - path:
+        type: PathPrefix
+        value: /askc-bak-svc-dev-noiap
