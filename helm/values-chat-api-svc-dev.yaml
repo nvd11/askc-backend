@@ -1,0 +1,42 @@
+# Custom values for chat-api-svc (Dev Environment)
+# This file overrides the default values in helm/values.yaml
+
+image:
+  repository: europe-west2-docker.pkg.dev/jason-hsbc/my-docker-repo/askc-bak-svc-dev
+  tag: ""
+
+service:
+  appName: askc-bak-svc-dev
+  name: clusterip-askc-bak-svc-dev
+  port: 8000
+
+livenessProbe: {}
+readinessProbe: {}
+
+autoscaling:
+  enabled: false
+
+# Dev environment settings
+appEnv: "dev"
+secretName: "chat-api-secrets-dev"
+
+# Inject ROOT_PATH for dev
+extraEnv:
+  - name: ROOT_PATH
+    value: "/askc-bak-svc-dev"
+
+cloudsql:
+  enabled: true
+  instanceConnectionName: "jason-hsbc:europe-west2:my-database-instance"
+
+iap:
+  enabled: true
+  clientID: "912156613264-eaphf3lhji9jbp402e2qac050oiq1cdm.apps.googleusercontent.com"
+  # Note: The secretName for IAP here is the default one in values.yaml ("iap-oauth-credentials") unless overridden.
+  # The task requirement says "所有gke的资源都要构造多一套for dev 包括iap".
+  # In deployment template, IAP secret is used in GCPBackendPolicy.
+  # If we want a separate IAP secret for dev, we should override it here.
+  # Let's assume we use "iap-oauth-credentials-dev" if it exists, or reuse the same if clientID is same.
+  # User requirement: "3点要额外注意... 2.所有gke的资源都要构造多一套for dev 包括iap... 和secret"
+  # This likely implies creating a new IAP secret too.
+  secretName: "iap-oauth-credentials-dev"
