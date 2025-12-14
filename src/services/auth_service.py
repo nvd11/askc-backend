@@ -23,11 +23,14 @@ class AuthService:
             self.jwks_client = None
             return
 
+        from loguru import logger
         self.issuer = f"https://{self.auth0_domain}/"
         jwks_url = f"https://{self.auth0_domain}/.well-known/jwks.json"
         self.jwks_client = PyJWKClient(jwks_url)
 
     def verify_token(self, token: str) -> dict:
+        from loguru import logger
+        logger.debug(f"Received token for verification (first 20 chars): {token[:20]}...")
         if not self.jwks_client:
             self._initialize() # Retry initialization if it failed/skipped before
             if not self.jwks_client:

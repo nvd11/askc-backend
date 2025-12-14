@@ -31,3 +31,6 @@ extraEnv:
     value: "askc-dev.uk.auth0.com"
   - name: AUTH0_AUDIENCE
     value: "https://api.askc.dev"
+  # Client ID for Swagger UI. Can be the same as the SPA client ID since we are using PKCE.
+  - name: AUTH0_CLIENT_ID_FOR_DOCS
+    value: "0C8PsO9Lw922EhaGwoHlyUq5Njk9Gizp"

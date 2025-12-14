@@ -9,6 +9,7 @@ from src.dao import user_dao
 from loguru import logger
 from src.services import user_service
 from src.services.auth_service import auth_service
+from src.routers.dependencies import validate_token_and_get_user
 
 router = APIRouter(
     prefix="/api/v1",
@@ -19,7 +20,9 @@ security = HTTPBearer(auto_error=False)
 
 @router.post("/users/", response_model=UserSchema)
 async def create_user_endpoint(
-    user: UserCreateSchema, db: AsyncSession = Depends(get_db_session)
+    user: UserCreateSchema, 
+    db: AsyncSession = Depends(get_db_session),
+    current_user: UserSchema = Depends(validate_token_and_get_user)
 ):
     """
     Create a new user.
@@ -31,7 +34,11 @@ async def create_user_endpoint(
     return created_user
 
 @router.get("/users/{username}", response_model=UserSchema)
-async def get_user_endpoint(username: str, db: AsyncSession = Depends(get_db_session)):
+async def get_user_endpoint(
+    username: str, 
+    db: AsyncSession = Depends(get_db_session),
+    current_user: UserSchema = Depends(validate_token_and_get_user)
+):
     """
     Get a single user by username.
     """
