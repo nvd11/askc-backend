@@ -1,15 +1,8 @@
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
-  annotations:
-    kubectl.kubernetes.io/last-applied-configuration: |
-      {"apiVersion":"gateway.networking.k8s.io/v1","kind":"HTTPRoute","metadata":{"annotations":{},"name":"py-api-route","namespace":"default"},"spec":{"hostnames":["jpgcp.shop","gateway.jpgcp.cloud"],"parentRefs":[{"group":"gateway.networking.k8s.io","kind":"Gateway","name":"py-api-gateway"}],"rules":[{"backendRefs":[{"group":"","kind":"Service","name":"clusterip-python-template-app","port":8000,"weight":1}],"matches":[{"path":{"type":"PathPrefix","value":"/python-template-app"}}]},{"backendRefs":[{"group":"","kind":"Service","name":"clusterip-chat-api-svc","port":8000,"weight":1}],"matches":[{"path":{"type":"PathPrefix","value":"/chat-api-svc"}}]},{"backendRefs":[{"group":"","kind":"Service","name":"chat-ui-frontend-service","port":80,"weight":1}],"filters":[{"type":"URLRewrite","urlRewrite":{"path":{"replacePrefixMatch":"/","type":"ReplacePrefixMatch"}}}],"matches":[{"path":{"type":"PathPrefix","value":"/chat"}}]},{"backendRefs":[{"group":"","kind":"Service","name":"chat-ui-iap-service","port":80,"weight":1}],"filters":[{"type":"URLRewrite","urlRewrite":{"path":{"replacePrefixMatch":"/","type":"ReplacePrefixMatch"}}}],"matches":[{"path":{"type":"PathPrefix","value":"/chat-iap"}}]},{"backendRefs":[{"group":"","kind":"Service","name":"clusterip-py-api-svc","port":8000,"weight":1}],"filters":[{"type":"URLRewrite","urlRewrite":{"path":{"replacePrefixMatch":"/","type":"ReplacePrefixMatch"}}}],"matches":[{"path":{"type":"PathPrefix","value":"/pyapi"}}]},{"backendRefs":[{"group":"","kind":"Service","name":"clusterip-py-webhook-svc","port":8000,"weight":1}],"filters":[{"type":"URLRewrite","urlRewrite":{"path":{"replacePrefixMatch":"/","type":"ReplacePrefixMatch"}}}],"matches":[{"path":{"type":"PathPrefix","value":"/webhook"}}]},{"backendRefs":[{"group":"","kind":"Service","name":"clusterip-py-github-agent","port":8000,"weight":1}],"matches":[{"path":{"type":"PathPrefix","value":"/py-github-agent"}}]},{"backendRefs":[{"group":"","kind":"Service","name":"clusterip-askc-bak-svc-iap","port":8000,"weight":1}],"matches":[{"path":{"type":"PathPrefix","value":"/askc-bak-svc"}}]},{"backendRefs":[{"group":"","kind":"Service","name":"clusterip-askc-bak-svc","port":8000,"weight":1}],"filters":[{"type":"URLRewrite","urlRewrite":{"path":{"replacePrefixMatch":"/","type":"ReplacePrefixMatch"}}}],"matches":[{"path":{"type":"PathPrefix","value":"/askc-bak-svc-noiap"}}]},{"backendRefs":[{"group":"","kind":"Service","name":"clusterip-askc-bak-svc-dev-iap","port":8000,"weight":1}],"matches":[{"path":{"type":"PathPrefix","value":"/askc-bak-svc-dev"}}]},{"backendRefs":[{"group":"","kind":"Service","name":"clusterip-askc-bak-svc-dev","port":8000,"weight":1}],"filters":[{"type":"URLRewrite","urlRewrite":{"path":{"replacePrefixMatch":"/","type":"ReplacePrefixMatch"}}}],"matches":[{"path":{"type":"PathPrefix","value":"/askc-bak-svc-dev-noiap"}}]},{"backendRefs":[{"group":"","kind":"Service","name":"askc-ui-service-iap","port":80,"weight":1}],"filters":[{"type":"URLRewrite","urlRewrite":{"path":{"replacePrefixMatch":"/","type":"ReplacePrefixMatch"}}}],"matches":[{"path":{"type":"PathPrefix","value":"/askc-ui"}}]},{"backendRefs":[{"group":"","kind":"Service","name":"askc-ui-dev-service-iap","port":80,"weight":1}],"filters":[{"type":"URLRewrite","urlRewrite":{"path":{"replacePrefixMatch":"/","type":"ReplacePrefixMatch"}}}],"matches":[{"path":{"type":"PathPrefix","value":"/askc-ui-dev"}}]}]}}
-  creationTimestamp: "2025-11-15T04:00:31Z"
-  generation: 28
   name: py-api-route
   namespace: default
-  resourceVersion: "1765689098290351022"
-  uid: 5c4b32d2-520a-4143-89df-866d0a684857
 spec:
   hostnames:
   - jpgcp.shop
@@ -116,7 +109,7 @@ spec:
   - backendRefs:
     - group: ""
       kind: Service
-      name: clusterip-askc-bak-svc-iap
+      name: clusterip-askc-bak-svc
       port: 8000
       weight: 1
     matches:
@@ -142,7 +135,7 @@ spec:
   - backendRefs:
     - group: ""
       kind: Service
-      name: clusterip-askc-bak-svc-dev-iap
+      name: clusterip-askc-bak-svc-dev
       port: 8000
       weight: 1
     matches:
@@ -168,7 +161,7 @@ spec:
   - backendRefs:
     - group: ""
       kind: Service
-      name: askc-ui-service-iap
+      name: askc-ui-service
       port: 80
       weight: 1
     filters:
@@ -184,7 +177,7 @@ spec:
   - backendRefs:
     - group: ""
       kind: Service
-      name: askc-ui-dev-service-iap
+      name: askc-ui-dev-service
       port: 80
       weight: 1
     filters:
@@ -197,29 +190,3 @@ spec:
     - path:
         type: PathPrefix
         value: /askc-ui-dev
-status:
-  parents:
-  - conditions:
-    - lastTransitionTime: "2025-12-13T15:43:38Z"
-      message: ""
-      observedGeneration: 28
-      reason: ResolvedRefs
-      status: "True"
-      type: ResolvedRefs
-    - lastTransitionTime: "2025-12-13T15:43:38Z"
-      message: ""
-      observedGeneration: 28
-      reason: Accepted
-      status: "True"
-      type: Accepted
-    - lastTransitionTime: "2025-12-14T05:11:34Z"
-      message: ""
-      observedGeneration: 28
-      reason: ReconciliationSucceeded
-      status: "True"
-      type: Reconciled
-    controllerName: networking.gke.io/gateway
-    parentRef:
-      group: gateway.networking.k8s.io
-      kind: Gateway
-      name: py-api-gateway

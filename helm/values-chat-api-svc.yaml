@@ -31,7 +31,17 @@ cloudsql:
   enabled: true
   instanceConnectionName: "jason-hsbc:europe-west2:my-database-instance"
 
-# Enable IAP for this service
+# IAP is disabled for this service, switching to Auth0
 iap:
-  enabled: true
-  clientID: "912156613264-eaphf3lhji9jbp402e2qac050oiq1cdm.apps.googleusercontent.com"
+  enabled: false
+  clientID: ""
+
+extraEnv:
+  - name: ROOT_PATH
+    value: "/askc-bak-svc"
+  - name: AUTH_PROVIDER
+    value: "auth0"
+  - name: AUTH0_DOMAIN
+    value: "askc-dev.uk.auth0.com"
+  - name: AUTH0_AUDIENCE
+    value: "https://api.askc.prod"
