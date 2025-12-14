@@ -22,18 +22,16 @@ spec:
     - path:
         type: PathPrefix
         value: /python-template-app
-
   - backendRefs:
     - group: ""
       kind: Service
-      name: clusterip-chat-api-svc-iap
+      name: clusterip-chat-api-svc
       port: 8000
       weight: 1
     matches:
     - path:
         type: PathPrefix
         value: /chat-api-svc
-
   - backendRefs:
     - group: ""
       kind: Service
@@ -50,7 +48,6 @@ spec:
     - path:
         type: PathPrefix
         value: /chat
-
   - backendRefs:
     - group: ""
       kind: Service
@@ -67,7 +64,6 @@ spec:
     - path:
         type: PathPrefix
         value: /chat-iap
-
   - backendRefs:
     - group: ""
       kind: Service
@@ -84,7 +80,6 @@ spec:
     - path:
         type: PathPrefix
         value: /pyapi
-
   - backendRefs:
     - group: ""
       kind: Service
@@ -101,7 +96,6 @@ spec:
     - path:
         type: PathPrefix
         value: /webhook
-
   - backendRefs:
     - group: ""
       kind: Service
@@ -112,7 +106,6 @@ spec:
     - path:
         type: PathPrefix
         value: /py-github-agent
-
   - backendRefs:
     - group: ""
       kind: Service
@@ -123,7 +116,6 @@ spec:
     - path:
         type: PathPrefix
         value: /askc-bak-svc
-
   - backendRefs:
     - group: ""
       kind: Service
@@ -140,18 +132,16 @@ spec:
     - path:
         type: PathPrefix
         value: /askc-bak-svc-noiap
-
   - backendRefs:
     - group: ""
       kind: Service
-      name: clusterip-askc-bak-svc-dev-iap
+      name: clusterip-askc-bak-svc-dev
       port: 8000
       weight: 1
     matches:
     - path:
         type: PathPrefix
         value: /askc-bak-svc-dev
-
   - backendRefs:
     - group: ""
       kind: Service
@@ -168,3 +158,35 @@ spec:
     - path:
         type: PathPrefix
         value: /askc-bak-svc-dev-noiap
+  - backendRefs:
+    - group: ""
+      kind: Service
+      name: askc-ui-service-iap
+      port: 80
+      weight: 1
+    filters:
+    - type: URLRewrite
+      urlRewrite:
+        path:
+          replacePrefixMatch: /
+          type: ReplacePrefixMatch
+    matches:
+    - path:
+        type: PathPrefix
+        value: /askc-ui
+  - backendRefs:
+    - group: ""
+      kind: Service
+      name: askc-ui-dev-service-iap
+      port: 80
+      weight: 1
+    filters:
+    - type: URLRewrite
+      urlRewrite:
+        path:
+          replacePrefixMatch: /
+          type: ReplacePrefixMatch
+    matches:
+    - path:
+        type: PathPrefix
+        value: /askc-ui-dev
