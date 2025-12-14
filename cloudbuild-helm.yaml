@@ -81,10 +81,14 @@ steps:
           --from-literal=DEEPSEEK_API_KEY="$$(gcloud secrets versions access latest --secret=deepseek-api-key --project=$PROJECT_ID)" \
           --dry-run=client -o yaml | kubectl apply -f -
         
+        # Fetch the Auth0 Client ID for docs from Secret Manager
+        DOCS_CLIENT_ID=$$(gcloud secrets versions access latest --secret=clien-id-auth0-askc-prod --project=$PROJECT_ID)
+
         # Run Helm deployment
         ./linux-amd64/helm upgrade --install ${_APP_NAME} ./helm \
           -f ./helm/values-chat-api-svc.yaml \
           --set image.tag=$$NEW_TAG \
+          --set-string "extraEnv[4].value=$$DOCS_CLIENT_ID" \
           --namespace default
     waitFor: ["Push Docker Image to GAR"]
 
