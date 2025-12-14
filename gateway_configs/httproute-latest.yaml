@@ -109,7 +109,7 @@ spec:
   - backendRefs:
     - group: ""
       kind: Service
-      name: clusterip-askc-bak-svc-iap
+      name: clusterip-askc-bak-svc
       port: 8000
       weight: 1
     matches:
@@ -161,7 +161,7 @@ spec:
   - backendRefs:
     - group: ""
       kind: Service
-      name: askc-ui-service-iap
+      name: askc-ui-service
       port: 80
       weight: 1
     filters:
@@ -177,7 +177,7 @@ spec:
   - backendRefs:
     - group: ""
       kind: Service
-      name: askc-ui-dev-service-iap
+      name: askc-ui-dev-service
       port: 80
       weight: 1
     filters:
