@@ -92,11 +92,6 @@ async def get_current_user_from_auth0(
     if not token:
         raise HTTPException(status_code=401, detail="Missing Bearer Token")
 
-    try:
-        return await user_service.process_auth0_login(db, token.credentials)
-    except HTTPException as e:
-        # Re-raise HTTPException to preserve status code and detail
-        raise e
-    except Exception as e:
-        logger.error(f"Unhandled error in /auth0/me endpoint: {e}")
-        raise HTTPException(status_code=500, detail="Internal server error processing authentication.")
+    # Let exceptions from the service layer propagate.
+    # Specific exceptions are handled in the service, and unhandled ones will be caught by FastAPI's default handler.
+    return await user_service.process_auth0_login(db, token.credentials)

@@ -4,6 +4,7 @@ import httpx
 from jwt import PyJWKClient
 from fastapi import HTTPException, status
 from cachetools import TTLCache
+from loguru import logger
 
 class AuthService:
     _instance = None
@@ -91,18 +92,19 @@ class AuthService:
                 if 'email' not in user_info:
                     user_info['email'] = None
                 
-                # --- Caching Step 2: Store the new entry ---
-                # After successfully fetching the user info, store it in the cache.
-                # The TTLCache will automatically associate it with the current timestamp.
-                # It will be valid for the next 1 hour (3600 seconds).
                 self.userinfo_cache[token] = user_info
-                
                 return user_info
             except httpx.HTTPStatusError as e:
                 raise HTTPException(
                     status_code=e.response.status_code,
                     detail=f"Error fetching user info from Auth0: {e.response.text}",
                     headers={"WWW-Authenticate": "Bearer"},
+                )
+            except httpx.RequestError as e:
+                logger.error(f"Network error while fetching user info from Auth0: {e}")
+                raise HTTPException(
+                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                    detail="Service unavailable: Could not connect to authentication service.",
                 )
 
 auth_service = AuthService()

@@ -20,7 +20,7 @@ async def test_get_current_user_from_iap_create_new_user():
     # Note: We patch where it is imported in the router, or the module itself if referenced fully.
     # In router it is imported as 'from src.services import user_service' and used as 'user_service.get_or_create_iap_user'
     
-    with patch("src.routers.user_router.user_service.get_or_create_iap_user", new_callable=AsyncMock) as mock_get_or_create:
+    with patch("src.routers.user_router.user_service.get_or_create_user", new_callable=AsyncMock) as mock_get_or_create:
         
         # Service returns a dict as per implementation
         mock_get_or_create.return_value = {
@@ -56,7 +56,7 @@ async def test_get_current_user_from_iap_existing_user():
         "X-Goog-Authenticated-User-Id": "9876543210"
     }
 
-    with patch("src.routers.user_router.user_service.get_or_create_iap_user", new_callable=AsyncMock) as mock_get_or_create:
+    with patch("src.routers.user_router.user_service.get_or_create_user", new_callable=AsyncMock) as mock_get_or_create:
         
         mock_get_or_create.return_value = {
             "email": "existing@example.com",
@@ -86,7 +86,7 @@ def test_get_current_user_no_headers():
     
     # We should verify Router calls Service with None.
     
-    with patch("src.routers.user_router.user_service.get_or_create_iap_user", new_callable=AsyncMock) as mock_get_or_create:
+    with patch("src.routers.user_router.user_service.get_or_create_user", new_callable=AsyncMock) as mock_get_or_create:
         mock_get_or_create.return_value = {
             "email": None,
             "idp_user_id": None,
