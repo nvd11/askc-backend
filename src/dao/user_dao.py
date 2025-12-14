@@ -23,6 +23,15 @@ async def get_user_by_email(db: AsyncSession, email: str) -> Optional[dict]:
     user = result.first()
     return user._asdict() if user else None
 
+async def get_user_by_id(db: AsyncSession, user_id: int) -> Optional[dict]:
+    """
+    Fetches a user by their ID.
+    """
+    query = select(users_table).where(users_table.c.id == user_id)
+    result = await db.execute(query)
+    user = result.first()
+    return user._asdict() if user else None
+
 async def create_user(db: AsyncSession, user: UserCreateSchema) -> dict:
     """
     Creates a new user in the database.

@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 from sqlalchemy import text
+from src.utils.auth_utils import oauth2_scheme
 from contextlib import asynccontextmanager
 import os
 
@@ -25,6 +26,9 @@ async def lifespan(app: FastAPI):
 # Get root_path from an environment variable. Defaults to "/askc-bak-svc" if not set.
 root_path = os.getenv("ROOT_PATH", "/askc-bak-svc")
 
+# Auth0 config for Swagger UI
+auth0_client_id = os.getenv("AUTH0_CLIENT_ID_FOR_DOCS", "")
+
 # Initialize the FastAPI app
 app = FastAPI(
     title="ChatGPT-style Streaming API",
@@ -32,6 +36,13 @@ app = FastAPI(
     version="1.0.0",
     root_path=root_path,
     lifespan=lifespan,
+    swagger_ui_oauth2_redirect_url="/oauth2-redirect",
+    swagger_ui_init_oauth={
+        "clientId": auth0_client_id,
+        "usePkceWithAuthorizationCodeGrant": True,
+        "scopes": "openid profile email",
+        "audience": os.getenv("AUTH0_AUDIENCE", "")
+    }
 )
 
 # Add CORS middleware

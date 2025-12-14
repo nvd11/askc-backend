@@ -7,6 +7,10 @@ from src.schemas.conversation import ConversationSchema, ConversationCreateSchem
 from src.schemas.message import MessageSchema
 from src.dao import conversation_dao, message_dao
 
+from src.routers.dependencies import validate_token_and_get_user
+
+from src.schemas.user import UserSchema
+
 router = APIRouter(
     prefix="/api/v1",
     tags=["Conversations"],
@@ -14,7 +18,9 @@ router = APIRouter(
 
 @router.post("/conversations/", response_model=ConversationSchema)
 async def create_conversation_endpoint(
-    conv: ConversationCreateSchema, db: AsyncSession = Depends(get_db_session)
+    conv: ConversationCreateSchema, 
+    db: AsyncSession = Depends(get_db_session),
+    current_user: UserSchema = Depends(validate_token_and_get_user)
 ):
     """
     Create a new conversation for a user.
@@ -25,7 +31,11 @@ async def create_conversation_endpoint(
 
 @router.get("/users/{user_id}/conversations", response_model=List[ConversationSchema])
 async def get_user_conversations_endpoint(
-    user_id: int, skip: int = 0, limit: int = 10, db: AsyncSession = Depends(get_db_session)
+    user_id: int, 
+    skip: int = 0, 
+    limit: int = 10, 
+    db: AsyncSession = Depends(get_db_session),
+    current_user: UserSchema = Depends(validate_token_and_get_user)
 ):
     """
     Get all conversations for a specific user.
@@ -37,7 +47,9 @@ async def get_user_conversations_endpoint(
 
 @router.get("/conversations/{conversation_id}", response_model=ConversationWithMessagesSchema)
 async def get_conversation_with_messages_endpoint(
-    conversation_id: int, db: AsyncSession = Depends(get_db_session)
+    conversation_id: int, 
+    db: AsyncSession = Depends(get_db_session),
+    current_user: UserSchema = Depends(validate_token_and_get_user)
 ):
     """
     Get a single conversation with all its messages.
