@@ -14,10 +14,16 @@ from src.configs.db import AsyncSessionFactory
 from sqlalchemy.exc import InterfaceError, OperationalError
 
 async def save_partial_response_task(conversation_id: int, content: str):
-    """
-    Background task to save partial response when stream is cancelled.
-    Creates a fresh DB session. Includes a retry mechanism to handle potential
-    connection race conditions (e.g., picking up a closing connection).
+    """Saves a partial assistant response in a background task.
+
+    This is used when a stream is cancelled (e.g., client disconnects) or
+    times out, ensuring that whatever the model has generated so far is not lost.
+    It creates its own database session to operate independently of the main
+    request's session, which might be in a cancelled state.
+
+    Args:
+        conversation_id (int): The ID of the conversation to save the message to.
+        content (str): The partial content of the assistant's response.
     """
     for attempt in range(3):
         try:
@@ -43,15 +49,25 @@ async def save_partial_response_task(conversation_id: int, content: str):
 async def stream_chat_response(
     request: ChatRequest, llm_service: LLMService, db: AsyncSession
 ):
-    """
-    Handles the logic of saving messages, retrieving history,
-    streaming the LLM response, and saving the final response.
+    """Handles the full chat logic with database interaction.
+
+    This async generator function saves the user's message, retrieves conversation
+    history, streams the LLM's response chunk by chunk, and finally saves the
+    complete assistant response to the database. It also handles exceptions,
+    timeouts, and client disconnections gracefully.
+
+    Args:
+        request (ChatRequest): The incoming chat request containing conversation ID and message.
+        llm_service (LLMService): The service responsible for interacting with the language model.
+        db (AsyncSession): The database session.
+
+    Yields:
+        str: Server-Sent Events (SSE) formatted strings, either containing response
+             chunks or the final [DONE] message.
     """
     if not llm_service:
         error_message = "LLM Service is not available."
         logger.error(error_message)
-        # Fallback to simple text if service not available, or construct a JSON error
-        # Since we want to standardize, let's use JSON even here
         error_data = {
             "id": f"chatcmpl-error",
             "object": "chat.completion.chunk",
@@ -75,10 +91,8 @@ async def stream_chat_response(
         db, conversation_id=request.conversation_id, limit=MAX_HISTORY_LENGTH
     )
     
-    # Reverse the list to restore chronological order (oldest first)
     history_from_db.reverse()
 
-    # Format history for the LLM
     chat_history = []
     for msg in history_from_db:
         if msg['role'] == 'user':
@@ -100,7 +114,6 @@ async def stream_chat_response(
         
         while True:
             try:
-                # Get next chunk with timeout (prevents hanging on a single chunk)
                 chunk_task = asyncio.create_task(stream_iter.__anext__())
                 chunk = await asyncio.wait_for(chunk_task, timeout=timeout_seconds)
                 
@@ -108,50 +121,29 @@ async def stream_chat_response(
                 if hasattr(chunk, 'content') and chunk.content:
                     full_response_content += chunk.content
                     
-                    # Construct OpenAI-compatible SSE chunk
                     chunk_data = {
                         "id": f"chatcmpl-{request.conversation_id}",
                         "object": "chat.completion.chunk",
                         "created": int(time.time()),
                         "model": request.model,
-                        "choices": [
-                            {
-                                "index": 0,
-                                "delta": {
-                                    "content": chunk.content
-                                },
-                                "finish_reason": None
-                            }
-                        ]
+                        "choices": [{"index": 0, "delta": {"content": chunk.content}, "finish_reason": None}]
                     }
                     yield f"data: {json.dumps(chunk_data)}\n\n"
             except StopAsyncIteration:
-                # Stream ended normally
                 break
             except asyncio.TimeoutError:
                 logger.warning(f"LLM stream timeout for conversation {request.conversation_id}, partial response length={len(full_response_content)}")
                 if full_response_content:
-                    # Save partial response on timeout
-                    # Use background task here too for safety, although loop is still running
                     asyncio.create_task(save_partial_response_task(request.conversation_id, full_response_content))
                     response_saved = True
                     logger.info(f"Triggered background save for partial response due to timeout: conv={request.conversation_id} len={len(full_response_content)}")
                 
-                # Send timeout message as content
                 timeout_data = {
                     "id": f"chatcmpl-{request.conversation_id}",
                     "object": "chat.completion.chunk",
                     "created": int(time.time()),
                     "model": request.model,
-                    "choices": [
-                        {
-                            "index": 0,
-                            "delta": {
-                                "content": "\n\n[Stream timeout after 5 minutes]"
-                            },
-                            "finish_reason": "stop"
-                        }
-                    ]
+                    "choices": [{"index": 0, "delta": {"content": "\n\n[Stream timeout after 5 minutes]"}, "finish_reason": "stop"}]
                 }
                 yield f"data: {json.dumps(timeout_data)}\n\n"
                 yield "data: [DONE]\n\n"
@@ -172,36 +164,23 @@ async def stream_chat_response(
             response_saved = True
 
     except asyncio.CancelledError:
-        # Client disconnected, save partial response if available
         logger.warning(f"Stream cancelled (client disconnected) for conversation {request.conversation_id}, partial response length={len(full_response_content)}")
         if full_response_content and not response_saved:
-            # Use a background task with a fresh session to save, as the current session/task is cancelled
             asyncio.create_task(save_partial_response_task(request.conversation_id, full_response_content))
-        raise  # Re-raise to properly clean up
+        raise
 
     except Exception as e:
         error_message = f"An error occurred during streaming: {e}"
         logger.exception(error_message)
-        # Try to save partial response on other errors
         if full_response_content and not response_saved:
-            # Also use background task for consistency, though current session might be valid depending on error
             asyncio.create_task(save_partial_response_task(request.conversation_id, full_response_content))
         
-        # Send error as content
         error_data = {
             "id": f"chatcmpl-{request.conversation_id}",
             "object": "chat.completion.chunk",
             "created": int(time.time()),
             "model": request.model,
-            "choices": [
-                {
-                    "index": 0,
-                    "delta": {
-                        "content": f"\n\n{error_message}"
-                    },
-                    "finish_reason": "stop"
-                }
-            ]
+            "choices": [{"index": 0, "delta": {"content": f"\n\n{error_message}"}, "finish_reason": "stop"}]
         }
         yield f"data: {json.dumps(error_data)}\n\n"
         yield "data: [DONE]\n\n"
@@ -210,8 +189,17 @@ async def stream_chat_response(
 async def stream_pure_chat_response(
     request: PureChatRequest, llm_service: LLMService
 ):
-    """
-    Handles the logic of streaming the LLM response directly, without any database interaction.
+    """Streams an LLM response without any database interaction.
+
+    This is a stateless endpoint useful for quick, non-persistent queries.
+    It takes a message and returns the LLM's response directly.
+
+    Args:
+        request (PureChatRequest): The request containing the user's message.
+        llm_service (LLMService): The service for interacting with the language model.
+
+    Yields:
+        str: Server-Sent Events (SSE) formatted strings.
     """
     if not llm_service:
         error_message = "LLM Service is not available."
@@ -230,10 +218,8 @@ async def stream_pure_chat_response(
     logger.info(f"Initiating pure stream with message: '{request.message}'")
     
     try:
-        # Call the astream method on the service with just the user's message
         llm_stream = llm_service.astream(request.message)
         
-        # Iterate over the stream and yield each chunk formatted as an SSE event
         async for chunk in llm_stream:
             if hasattr(chunk, 'content') and chunk.content:
                 chunk_data = {
@@ -241,15 +227,7 @@ async def stream_pure_chat_response(
                     "object": "chat.completion.chunk",
                     "created": int(time.time()),
                     "model": request.model,
-                    "choices": [
-                        {
-                            "index": 0,
-                            "delta": {
-                                "content": chunk.content
-                            },
-                            "finish_reason": None
-                        }
-                    ]
+                    "choices": [{"index": 0, "delta": {"content": chunk.content}, "finish_reason": None}]
                 }
                 yield f"data: {json.dumps(chunk_data)}\n\n"
         
@@ -265,15 +243,7 @@ async def stream_pure_chat_response(
             "object": "chat.completion.chunk",
             "created": int(time.time()),
             "model": request.model,
-            "choices": [
-                {
-                    "index": 0,
-                    "delta": {
-                        "content": f"\n\n{error_message}"
-                    },
-                    "finish_reason": "stop"
-                }
-            ]
+            "choices": [{"index": 0, "delta": {"content": f"\n\n{error_message}"}, "finish_reason": "stop"}]
         }
         yield f"data: {json.dumps(error_data)}\n\n"
         yield "data: [DONE]\n\n"

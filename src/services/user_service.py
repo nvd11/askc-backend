@@ -6,9 +6,20 @@ from src.services.auth_service import auth_service
 from loguru import logger
 
 async def get_or_create_user(db: AsyncSession, email: str, idp_user_id: str, username: str) -> dict:
-    """
-    Check if a user exists by username. If not, create a new user.
-    Returns a dictionary compatible with IAPUser schema.
+    """Checks if a user exists by username, creating one if not found.
+
+    This function serves as the central point for synchronizing users from an
+    identity provider (like Google IAP or Auth0) with the local database.
+
+    Args:
+        db (AsyncSession): The database session.
+        email (str): The user's email address.
+        idp_user_id (str): The user's unique ID from the identity provider (e.g., Auth0 `sub`).
+        username (str): The user's username.
+
+    Returns:
+        dict: A dictionary containing the synchronized user's information,
+              matching the IAPUser schema.
     """
     if not username:
         raise HTTPException(status_code=400, detail="Username is required to get or create a user.")
@@ -31,12 +42,24 @@ async def get_or_create_user(db: AsyncSession, email: str, idp_user_id: str, use
 
     return {"email": email, "idp_user_id": idp_user_id, "user_id": user_id, "username": username}
 
+
+
+
+
 async def process_auth0_login(db: AsyncSession, token: str) -> dict:
-    """
-    Handles the logic for an Auth0 login.
-    1. Verifies the token.
-    2. Fetches user info from Auth0's /userinfo endpoint.
-    3. Creates or retrieves the corresponding user in the local database.
+    """Handles the full logic for an Auth0 login.
+
+    This involves validating the token, fetching user info from the /userinfo 
+    endpoint to ensure an email is present, and then creating or retrieving 
+    the user in the local database.
+
+    Args:
+        db (AsyncSession): The database session.
+        token (str): The raw Access Token from the 'Authorization: Bearer' header.
+
+    Returns:
+        dict: A dictionary containing the synchronized user's information,
+              matching the IAPUser schema.
     """
     # Step 1: Verify token & get user info
     auth_service.verify_token(token)
@@ -48,7 +71,7 @@ async def process_auth0_login(db: AsyncSession, token: str) -> dict:
     username = user_info.get("nickname") # Get username from 'nickname' claim
 
     if not email:
-        logger.warning(f"Email not found in UserInfo payload. Cannot create user. Sub: {idp_user_id}")
+        logger.warning(f"Email not found in UserInfo payload. Cannot create or link user. Sub: {idp_user_id}")
         return {"email": None, "idp_user_id": idp_user_id, "user_id": None, "username": username}
 
     if not username:
