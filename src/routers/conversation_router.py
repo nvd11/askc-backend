@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
+from loguru import logger
 
 from src.configs.db import get_db_session
 from src.schemas.conversation import ConversationSchema, ConversationCreateSchema, ConversationWithMessagesSchema
@@ -50,6 +51,14 @@ async def get_user_conversations_endpoint(
     conversations = await conversation_dao.get_conversations_by_user(
         db=db, user_id=user_id, skip=skip, limit=limit
     )
+
+    # If the user has no conversations, create a default one.
+    if not conversations:
+        logger.info(f"No conversations found for user {user_id}. Creating a default one.")
+        new_conv_schema = ConversationCreateSchema(user_id=current_user.id, name="hello")
+        created_conv = await conversation_dao.create_conversation(db=db, conv=new_conv_schema)
+        conversations = [created_conv]
+
     return conversations
 
 @router.get("/conversations/{conversation_id}", response_model=ConversationWithMessagesSchema)

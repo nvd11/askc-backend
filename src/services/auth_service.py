@@ -3,6 +3,7 @@ import jwt
 import httpx
 from jwt import PyJWKClient
 from fastapi import HTTPException, status
+from cachetools import TTLCache
 
 class AuthService:
     _instance = None
@@ -27,6 +28,11 @@ class AuthService:
         self.issuer = f"https://{self.auth0_domain}/"
         jwks_url = f"https://{self.auth0_domain}/.well-known/jwks.json"
         self.jwks_client = PyJWKClient(jwks_url)
+        # Initialize a Time-To-Live (TTL) cache for user info.
+        # This cache stores up to 1024 user info entries. Each entry expires after
+        # 3600 seconds (1 hour) to avoid hitting Auth0's /userinfo rate limits.
+        # Expired items are automatically evicted upon access.
+        self.userinfo_cache = TTLCache(maxsize=1024, ttl=3600)
 
     def verify_token(self, token: str) -> dict:
         from loguru import logger
@@ -58,6 +64,14 @@ class AuthService:
             )
 
     async def get_user_info(self, token: str) -> dict:
+        # --- Caching Step 1: Check for existing entry ---
+        # Before making an API call, check if the user info for this specific token
+        # is already in our cache.
+        if token in self.userinfo_cache:
+            # If found, return the cached data immediately.
+            return self.userinfo_cache[token]
+
+        # --- API Call Step: If not in cache, fetch from Auth0 ---
         if not self.auth0_domain:
             self._initialize()
             if not self.auth0_domain:
@@ -74,9 +88,15 @@ class AuthService:
                 response = await client.get(userinfo_url, headers=headers)
                 response.raise_for_status()
                 user_info = response.json()
-                # Ensure 'email' is present, even if it's null from the provider
                 if 'email' not in user_info:
                     user_info['email'] = None
+                
+                # --- Caching Step 2: Store the new entry ---
+                # After successfully fetching the user info, store it in the cache.
+                # The TTLCache will automatically associate it with the current timestamp.
+                # It will be valid for the next 1 hour (3600 seconds).
+                self.userinfo_cache[token] = user_info
+                
                 return user_info
             except httpx.HTTPStatusError as e:
                 raise HTTPException(
