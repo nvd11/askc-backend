@@ -14,6 +14,7 @@ from src.services.llm_service import LLMService
 from src.configs.db import get_db_session
 from src.schemas.chat import ChatRequest, PureChatRequest
 from src.services import chat_service
+from src.dao import conversation_dao
 
 from src.routers.dependencies import validate_token_and_get_user
 
@@ -37,6 +38,11 @@ async def chat(
     and returns the model's response as a stream of Server-Sent Events (SSE).
     The assistant's final response is also saved to the database.
     """
+    # Security Fix: Verify the user owns the conversation before proceeding.
+    conversation = await conversation_dao.get_conversation(db, request.conversation_id)
+    if not conversation or conversation['user_id'] != current_user.id:
+        raise HTTPException(status_code=403, detail="Not authorized to access this conversation.")
+
     logger.info(f"Received chat request for conv {request.conversation_id} with model: {request.model}")
 
     try:

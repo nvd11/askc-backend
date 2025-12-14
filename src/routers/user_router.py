@@ -26,6 +26,10 @@ async def create_user_endpoint(
 ):
     """
     Create a new user.
+
+    Note: This endpoint is not used in the standard Auth0 login flow,
+    as users are created automatically upon their first login via the /auth0/me endpoint.
+    This can be used for administrative or testing purposes.
     """
     db_user = await user_dao.get_user_by_username(db, username=user.username)
     if db_user:
@@ -41,7 +45,13 @@ async def get_user_endpoint(
 ):
     """
     Get a single user by username.
+
+    Note: This endpoint is not currently used by the frontend, but is kept for potential future use.
     """
+    # Security Fix: Ensure the authenticated user can only access their own details.
+    if current_user.username != username:
+        raise HTTPException(status_code=403, detail="Not authorized to access this resource.")
+        
     db_user = await user_dao.get_user_by_username(db, username=username)
     if db_user is None:
         raise HTTPException(status_code=404, detail="User not found")

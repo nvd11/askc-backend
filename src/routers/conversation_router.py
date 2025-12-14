@@ -25,7 +25,10 @@ async def create_conversation_endpoint(
     """
     Create a new conversation for a user.
     """
-    # In a real app, you'd verify the user exists first.
+    # Security Fix: Ensure the user can only create a conversation for themselves.
+    if conv.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not authorized to create a conversation for another user.")
+
     created_conv = await conversation_dao.create_conversation(db=db, conv=conv)
     return created_conv
 
@@ -40,6 +43,10 @@ async def get_user_conversations_endpoint(
     """
     Get all conversations for a specific user.
     """
+    # Security Fix: Ensure the authenticated user can only access their own conversations.
+    if current_user.id != user_id:
+        raise HTTPException(status_code=403, detail="Not authorized to access this resource.")
+
     conversations = await conversation_dao.get_conversations_by_user(
         db=db, user_id=user_id, skip=skip, limit=limit
     )
@@ -59,6 +66,10 @@ async def get_conversation_with_messages_endpoint(
     conv_dict = await conversation_dao.get_conversation(db, conversation_id)
     if not conv_dict:
         raise HTTPException(status_code=404, detail="Conversation not found")
+
+    # Security Fix: Ensure the authenticated user can only access their own conversation.
+    if conv_dict['user_id'] != current_user.id:
+        raise HTTPException(status_code=403, detail="Not authorized to access this resource.")
 
     messages = await message_dao.get_messages_by_conversation(
         db=db, conversation_id=conversation_id

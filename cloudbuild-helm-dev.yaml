@@ -68,18 +68,20 @@ steps:
         gcloud container clusters get-credentials ${_CLUSTER_NAME} --region ${_CLUSTER_LOCATION} --project $PROJECT_ID
         
         # Create/Update dev secret (chat-api-secrets-dev)
-        # Assuming we reuse the same Secret Manager secrets for now.
-        echo "--- Creating/Updating Kubernetes secret 'chat-api-secrets-dev' ---"
         kubectl create secret generic chat-api-secrets-dev \
           --from-literal=DB_PASSWORD="$$(gcloud secrets versions access latest --secret=db-pass-nvd11 --project=$PROJECT_ID)" \
           --from-literal=GEMINI_API_KEY="$$(gcloud secrets versions access latest --secret=gemini-api-key --project=$PROJECT_ID)" \
           --from-literal=DEEPSEEK_API_KEY="$$(gcloud secrets versions access latest --secret=deepseek-api-key --project=$PROJECT_ID)" \
           --dry-run=client -o yaml | kubectl apply -f -
         
-        # Run Helm deployment with values-chat-api-svc-dev.yaml
+        # Fetch the Auth0 Client ID for docs from Secret Manager
+        DOCS_CLIENT_ID=$$(gcloud secrets versions access latest --secret=clien-id-auth0-askc-dev --project=$PROJECT_ID)
+
+        # Run Helm deployment, overriding the client ID placeholder
         ./linux-amd64/helm upgrade --install ${_APP_NAME} ./helm \
           -f ./helm/values-chat-api-svc-dev.yaml \
           --set image.tag=$$NEW_TAG \
+          --set-string "extraEnv[4].value=$$DOCS_CLIENT_ID" \
           --namespace default
     waitFor: ["Push Docker Image to GAR"]
 

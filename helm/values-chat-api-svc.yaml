@@ -45,3 +45,6 @@ extraEnv:
     value: "askc-dev.uk.auth0.com"
   - name: AUTH0_AUDIENCE
     value: "https://api.askc.prod"
+  # Client ID for Swagger UI. This value will be injected by Cloud Build from Secret Manager.
+  - name: AUTH0_CLIENT_ID_FOR_DOCS
+    value: "placeholder-will-be-overwritten"
