@@ -4,7 +4,7 @@
 [https://gateway.jpgcp.cloud/askc-ui/](https://gateway.jpgcp.cloud/askc-ui/) (Requires GitHub login via Auth0)
 
 **DVE URL:**
- [https://gateway.jpgcp.cloud/askc-ui/](https://gateway.jpgcp.cloud/askc-ui/) (might be not stable)     
+ [https://gateway.jpgcp.cloud/askc-ui-dev/](https://gateway.jpgcp.cloud/askc-ui/) (might be not stable)     
 **Architecture Diagram:**
 <img width="1801" height="924" alt="image" src="https://github.com/user-attachments/assets/0833c49a-3c29-4e1e-b05b-cce7d7360219" />
 
