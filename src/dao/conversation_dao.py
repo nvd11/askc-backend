@@ -33,6 +33,8 @@ async def create_conversation(db: AsyncSession, conv: ConversationCreateSchema) 
     
     return created_conv._asdict()
 
+
+
 async def get_conversation(db: AsyncSession, conversation_id: int) -> Optional[Dict[str, Any]]:
     """Fetches a single conversation by its ID.
 
@@ -47,6 +49,8 @@ async def get_conversation(db: AsyncSession, conversation_id: int) -> Optional[D
     result = await db.execute(query)
     conv = result.first()
     return conv._asdict() if conv else None
+
+
 
 async def get_conversations_by_user(db: AsyncSession, user_id: int, skip: int = 0, limit: int = 10) -> List[Dict[str, Any]]:
     """Fetches a paginated list of conversations for a user, including a message preview.

@@ -16,6 +16,8 @@ class LLMService:
         self.llm = llm
         logger.info("LLMService initialized.")
 
+
+
     async def ainvoke(self, prompt: str) -> BaseMessageChunk:
         """Invokes the language model with a given prompt and returns the full response.
 
@@ -29,6 +31,8 @@ class LLMService:
         response = await self.llm.ainvoke(prompt)
         logger.info("LLMService ainvocation complete.")
         return response
+
+
 
     def astream(self, prompt: str) -> AsyncIterator[BaseMessageChunk]:
         """Streams the response from the language model for a given prompt.

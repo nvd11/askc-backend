@@ -13,6 +13,9 @@ from src.configs.db import AsyncSessionFactory
 
 from sqlalchemy.exc import InterfaceError, OperationalError
 
+# Defines the maximum number of historical messages to retrieve for context.
+MAX_HISTORY_LENGTH = 20
+
 async def save_partial_response_task(conversation_id: int, content: str):
     """Saves a partial assistant response in a background task.
 
@@ -45,6 +48,8 @@ async def save_partial_response_task(conversation_id: int, content: str):
         except Exception as e:
             logger.error(f"Failed to save partial response due to unexpected error: {e}")
             break  # Don't retry on unknown errors
+
+
 
 async def stream_chat_response(
     request: ChatRequest, llm_service: LLMService, db: AsyncSession
@@ -85,8 +90,7 @@ async def stream_chat_response(
     )
     await message_dao.create_message(db, message=user_message_to_save)
 
-    # 2. Define history limit and load conversation history from DB
-    MAX_HISTORY_LENGTH = 20
+    # 2. Load conversation history from DB
     history_from_db = await message_dao.get_messages_by_conversation(
         db, conversation_id=request.conversation_id, limit=MAX_HISTORY_LENGTH
     )
@@ -184,6 +188,7 @@ async def stream_chat_response(
         }
         yield f"data: {json.dumps(error_data)}\n\n"
         yield "data: [DONE]\n\n"
+
 
 
 async def stream_pure_chat_response(

@@ -1,5 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException
+from sqlalchemy.exc import IntegrityError
 from src.dao import user_dao
 from src.schemas.user import UserCreateSchema
 from src.services.auth_service import auth_service
@@ -33,16 +34,20 @@ async def get_or_create_user(db: AsyncSession, email: str, idp_user_id: str, use
         try:
             created_user = await user_dao.create_user(db, new_user_schema)
             user_id = created_user["id"]
+        except IntegrityError as e:
+            logger.error(f"Failed to create user '{username}' due to integrity error (e.g., username already exists): {e}")
+            # Rollback the session in case of integrity error
+            await db.rollback()
+            raise HTTPException(status_code=409, detail=f"A user with username '{username}' may already exist.")
         except Exception as e:
-            logger.error(f"Failed to create user '{username}': {e}")
+            logger.error(f"Failed to create user '{username}' due to an unexpected error: {e}")
+            await db.rollback()
             raise HTTPException(status_code=500, detail="Could not create user account.")
     else:
         logger.info(f"Found existing user '{username}' with id {db_user['id']}.")
         user_id = db_user["id"]
 
     return {"email": email, "idp_user_id": idp_user_id, "user_id": user_id, "username": username}
-
-
 
 
 
