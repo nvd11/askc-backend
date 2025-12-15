@@ -19,38 +19,34 @@ Let's follow a user from clicking "Login" to seeing data:
 
 ```mermaid
 sequenceDiagram
-    participant User as User
-    participant Browser as Browser (Frontend SPA)
-    participant Auth0 as Auth0
+    participant User
+    participant Browser as Browser (AskC UI Dev)
+    participant Auth0
     participant GitHub
-    participant Backend as Backend API
+    participant Backend as AskC Backend Dev
 
-    %% -- Login Phase --
-    Note over User,Auth0: Phase 1: Getting the "Key" and "ID Card"
-    User->>Browser: Opens App
-    Browser->>Auth0: 1. Take me to login! (Sends Client ID)
-    Auth0->>GitHub: 2. User wants to login with GitHub, authorize?
-    User->>GitHub: 3. Yes! (Enters password & confirms)
-    GitHub->>Auth0: 4. OK, here is a temporary Authorization Code
-    Auth0->>Browser: 5. Take this code back to the app
+    User->>Browser: Visit https://gateway.jpgcp.cloud/askc-ui-dev/
+    Browser->>Auth0: Redirect to Auth0 Login (With Client ID)
+    Auth0->>GitHub: Redirect to GitHub Authorization
+    User->>GitHub: Login to GitHub & Authorize
+    GitHub->>Auth0: Callback to Auth0 (With Authorization Code)
+    Auth0->>Browser: Callback to App (With Authorization Code)
+    Browser->>Auth0: Exchange Code for Access Token & ID Token (PKCE)
+    Auth0->>Browser: Return Tokens
     
-    Note over Browser,Auth0: Phase 2: Secure Exchange (PKCE)
-    Browser->>Auth0: 6. Here is the code + my PKCE Verifier, give me tokens!
-    Auth0->>Browser: 7. Verified! Here are your Access Token (Key) & ID Token (ID Card)
-    Browser->>Browser: 8. Stores tokens, displays user avatar
+    Note over Browser, Backend: API Call Phase
+    
+    Browser->>Backend: Send Request (Header: "Authorization: Bearer <Token>")
+    
+    par Backend Dual Verification
+        Backend->>Auth0: 1. Fetch Public Key & Verify Signature (Ensure Token is valid)
+        Backend->>Auth0: 2. Fetch User Info with Token (Ensure Email is retrieved)
+    end
 
-    %% -- API Call Phase --
-    Note over Browser,Backend: Phase 3: Fetching Data with the "Key"
-    Browser->>Backend: 9. I want data (Header: "Authorization: Bearer <Access Token>")
-    
-    Note over Backend,Auth0: Phase 4: Backend Verification
-    Backend->>Auth0: 10. What is your Public Key? (Only asked once/cached)
-    Backend->>Backend: 11. Uses Public Key to check signature: Is this key real? Not expired? Is it for me?
-    
     alt Verification Success
-        Backend->>Browser: 12. All good, here is your data (200 OK)
+        Backend->>Browser: Return Data (200 OK)
     else Verification Failed
-        Backend->>Browser: 13. Fake key! Go away (401 Unauthorized)
+        Backend->>Browser: Return Error (401 Unauthorized)
     end
 ```
 
