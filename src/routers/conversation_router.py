@@ -64,14 +64,14 @@ async def get_user_conversations_endpoint(
 @router.get("/conversations/{conversation_id}", response_model=ConversationWithMessagesSchema)
 async def get_conversation_with_messages_endpoint(
     conversation_id: int, 
+    skip: int = 0, 
+    limit: int = 100,
     db: AsyncSession = Depends(get_db_session),
     current_user: UserSchema = Depends(validate_token_and_get_user)
 ):
     """
-    Get a single conversation with all its messages.
+    Get a single conversation with its messages (paginated).
     """
-    # This is not the most efficient way, but it's simple.
-    # A single query with a JOIN would be better.
     conv_dict = await conversation_dao.get_conversation(db, conversation_id)
     if not conv_dict:
         raise HTTPException(status_code=404, detail="Conversation not found")
@@ -80,9 +80,12 @@ async def get_conversation_with_messages_endpoint(
     if conv_dict['user_id'] != current_user.id:
         raise HTTPException(status_code=403, detail="Not authorized to access this resource.")
 
+    # Fetch paginated messages (most recent first)
     messages = await message_dao.get_messages_by_conversation(
-        db=db, conversation_id=conversation_id
+        db=db, conversation_id=conversation_id, skip=skip, limit=limit
     )
+    # Reverse to show chronological order in the response
+    messages.reverse()
     
     # Manually construct the final response model
     response_data = {
