@@ -14,6 +14,8 @@ async def get_user_by_username(db: AsyncSession, username: str) -> Optional[dict
     user = result.first()
     return user._asdict() if user else None
 
+
+
 async def get_user_by_email(db: AsyncSession, email: str) -> Optional[dict]:
     """
     Fetches a user by their email.
@@ -23,6 +25,8 @@ async def get_user_by_email(db: AsyncSession, email: str) -> Optional[dict]:
     user = result.first()
     return user._asdict() if user else None
 
+
+
 async def get_user_by_id(db: AsyncSession, user_id: int) -> Optional[dict]:
     """
     Fetches a user by their ID.
@@ -31,6 +35,8 @@ async def get_user_by_id(db: AsyncSession, user_id: int) -> Optional[dict]:
     result = await db.execute(query)
     user = result.first()
     return user._asdict() if user else None
+
+
 
 async def create_user(db: AsyncSession, user: UserCreateSchema) -> dict:
     """

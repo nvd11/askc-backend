@@ -51,8 +51,6 @@ async def get_or_create_user(db: AsyncSession, email: str, idp_user_id: str, use
 
 
 
-
-
 async def process_auth0_login(db: AsyncSession, token: str) -> dict:
     """Handles the full logic for an Auth0 login.
 

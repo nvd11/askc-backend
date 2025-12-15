@@ -26,6 +26,8 @@ async def create_message(db: AsyncSession, message: MessageCreateSchema) -> Dict
     await db.commit()
     return created_message._asdict()
 
+
+
 async def get_messages_by_conversation(db: AsyncSession, conversation_id: int, limit: Optional[int] = None) -> List[Dict[str, Any]]:
     """Fetches messages for a specific conversation.
 
