@@ -4,8 +4,8 @@
 [https://gateway.jpgcp.cloud/askc-ui/](https://gateway.jpgcp.cloud/askc-ui/) (Requires GitHub login via Auth0)
 
 **Architecture Diagram:**
+<img width="1801" height="924" alt="image" src="https://github.com/user-attachments/assets/0833c49a-3c29-4e1e-b05b-cce7d7360219" />
 
-(Imagine a diagram here connecting UI, Backend, DB, and LLM)
 
 ### Repositories & Tech Stack
 
