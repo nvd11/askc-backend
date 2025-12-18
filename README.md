@@ -55,6 +55,7 @@ The project follows a standard service-oriented architecture, separating concern
 ├── src/                      # Main source code
 │   ├── configs/              # Application & DB configuration
 │   ├── dao/                  # Data Access Objects (raw DB queries)
+|   ├── llm/                  # LLM ChatModels
 │   ├── models/               # SQLAlchemy table definitions
 │   ├── routers/              # API Routers (endpoints) & dependencies
 │   ├── schemas/              # Pydantic models for data validation
