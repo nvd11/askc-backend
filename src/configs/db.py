@@ -1,8 +1,7 @@
 import os
-import os
 from typing import AsyncGenerator
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
+from sqlalchemy.orm import declarative_base
 from loguru import logger
 
 from src.configs.config import yaml_configs
@@ -12,7 +11,9 @@ def build_db_url(db_config: dict) -> str | None:
     user = db_config.get("user")
     password_env_var = db_config.get("password_env_var")
 
-    password = os.getenv(password_env_var)
+    password = None
+    if password_env_var and isinstance(password_env_var, str):
+        password = os.getenv(password_env_var)
 
     if not all([user, password]):
         logger.error(f"DB user not in config or password not in env var ('{password_env_var}').")
@@ -22,8 +23,8 @@ def build_db_url(db_config: dict) -> str | None:
     port = db_config.get("port")
     dbname = db_config.get("dbname")
 
-    if not all([host, port, dbname]):
-        logger.error("DB host, port, or dbname missing in config.")
+    if not all([host, port, dbname]) or not isinstance(host, str):
+        logger.error("DB host, port, or dbname missing or invalid.")
         return None
 
     if host.startswith("/"):
@@ -67,9 +68,8 @@ def get_async_engine():
 
 # Create a sessionmaker for creating AsyncSession instances
 # The bind is deferred until the engine is created.
-AsyncSessionFactory = sessionmaker(
+AsyncSessionFactory = async_sessionmaker(
     bind=get_async_engine(),
-    class_=AsyncSession,
     expire_on_commit=False,
 )
 
